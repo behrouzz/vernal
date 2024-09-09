@@ -1,6 +1,7 @@
 import numpy as np
 import erfa
 import spiceypy as sp
+from iers import historic_ut1_tt
 
 
 J2000 = 2451545
@@ -35,6 +36,23 @@ def tdb2tt(tdb):
     et = jd2et(tdb)
     tt = et2tt(et)
     return tt
+
+def tt2ut1(tt, delta_df=None):
+    delta_df['tt'] = delta_df['mjd'] - (delta_df['ut1_tt']/86400)
+    ttMJD = tt - 2400000.5
+    ut1Mjd = np.interp(ttMJD, delta_df['tt'], delta_df['mjd'])
+    return ut1Mjd + 2400000.5
+
+def tt2ut1Arr(ttArr, delta_df=None):
+    if delta_df is None:
+        delta_df = historic_ut1_tt()
+    elif 'ut1_tt' not in delta_df.columns:
+        delta_df['ut1_tt'] = delta_df['ut1_tai'] - 32.184
+    delta_df['tt'] = delta_df['mjd'] - (delta_df['ut1_tt']/86400)
+    ttMJD = ttArr - 2400000.5
+    ut1Mjd = np.interp(ttMJD, delta_df['tt'], delta_df['mjd'])
+    ut1Arr = ut1Mjd + 2400000.5
+    return ut1Arr
 
 
 def sofa_time(t):
