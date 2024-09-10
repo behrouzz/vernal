@@ -13,14 +13,15 @@ def jd2et(jd):
     et = (jd - J2000) * 86400
     return et
 
+
 def tt2et(tt):
     tt = format(tt, '.50f')# for very small numbers
     et = sp.str2et(f'JD {tt} TDT')
     return et
 
-def et2tt(et): #should think about 60
-    tt1 = et2jd(et - 60)
-    tt2 = et2jd(et + 60)
+def et2tt(et): #should think about 1
+    tt1 = et2jd(et - 1)
+    tt2 = et2jd(et + 1)
     et1 = tt2et(tt1)
     et2 = tt2et(tt2)
     tt = np.interp(et, [et1, et2], [tt1, tt2])
@@ -36,11 +37,6 @@ def tdb2tt(tdb):
     tt = et2tt(et)
     return tt
 
-##def tt2ut1(tt, delta_df=None):
-##    delta_df['tt'] = delta_df['mjd'] - (delta_df['ut1_tt']/86400)
-##    ttMJD = tt - 2400000.5
-##    ut1Mjd = np.interp(ttMJD, delta_df['tt'], delta_df['mjd'])
-##    return ut1Mjd + 2400000.5
 
 def tt2ut1(tt, delta_df=None):
     if delta_df is None:
@@ -52,6 +48,21 @@ def tt2ut1(tt, delta_df=None):
     ut1Mjd = np.interp(ttMJD, delta_df['tt'], delta_df['mjd'])
     ut1 = ut1Mjd + 2400000.5
     return ut1
+
+
+def guess_et_ver(y):
+    """
+    Guess an initial value for vernal equinox for given year
+
+    Argument:
+        y (int): Gregorian year
+    Returns:
+        et_guess (float): time of vernal equinox (et)
+    """
+    et2000ver = 6809769.449749
+    dy = y - 2000
+    et_guess = et2000ver + (dy * 365.25 * 86400)
+    return et_guess
 
 
 def sofa_time(t):
