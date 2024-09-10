@@ -3,7 +3,6 @@ import erfa
 import spiceypy as sp
 from iers import historic_ut1_tt
 
-
 J2000 = 2451545
 
 def et2jd(et):
@@ -19,12 +18,12 @@ def tt2et(tt):
     et = sp.str2et(f'JD {tt} TDT')
     return et
 
-def et2tt(et):
-    et1JD = et2jd(et - (86400 * 1))
-    et2JD = et2jd(et + (86400 * 1))
-    et1 = tt2et(et1JD)
-    et2 = tt2et(et2JD)
-    tt = np.interp(et, [et1, et2], [et1JD, et2JD])
+def et2tt(et): #should think about 60
+    tt1 = et2jd(et - 60)
+    tt2 = et2jd(et + 60)
+    et1 = tt2et(tt1)
+    et2 = tt2et(tt2)
+    tt = np.interp(et, [et1, et2], [tt1, tt2])
     return tt
 
 def tt2tdb(tt):
@@ -37,22 +36,22 @@ def tdb2tt(tdb):
     tt = et2tt(et)
     return tt
 
-def tt2ut1(tt, delta_df=None):
-    delta_df['tt'] = delta_df['mjd'] - (delta_df['ut1_tt']/86400)
-    ttMJD = tt - 2400000.5
-    ut1Mjd = np.interp(ttMJD, delta_df['tt'], delta_df['mjd'])
-    return ut1Mjd + 2400000.5
+##def tt2ut1(tt, delta_df=None):
+##    delta_df['tt'] = delta_df['mjd'] - (delta_df['ut1_tt']/86400)
+##    ttMJD = tt - 2400000.5
+##    ut1Mjd = np.interp(ttMJD, delta_df['tt'], delta_df['mjd'])
+##    return ut1Mjd + 2400000.5
 
-def tt2ut1Arr(ttArr, delta_df=None):
+def tt2ut1(tt, delta_df=None):
     if delta_df is None:
         delta_df = historic_ut1_tt()
     elif 'ut1_tt' not in delta_df.columns:
         delta_df['ut1_tt'] = delta_df['ut1_tai'] - 32.184
     delta_df['tt'] = delta_df['mjd'] - (delta_df['ut1_tt']/86400)
-    ttMJD = ttArr - 2400000.5
+    ttMJD = tt - 2400000.5
     ut1Mjd = np.interp(ttMJD, delta_df['tt'], delta_df['mjd'])
-    ut1Arr = ut1Mjd + 2400000.5
-    return ut1Arr
+    ut1 = ut1Mjd + 2400000.5
+    return ut1
 
 
 def sofa_time(t):
