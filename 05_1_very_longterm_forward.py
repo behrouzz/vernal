@@ -5,16 +5,7 @@ from vernal.rapid import from2000
 import pandas as pd
 
 
-#BASE = 'C:/Moi/_py/Astronomy/Solar System/kernels/'
-BASE = 'C:/Users/H21/Desktop/Desktop/Behrouz/Astronomy/kernels/'
-kernels = [
-    'naif0012.tls', 'pck00010.tpc', 'earth_latest_high_prec.bpc',
-    'de441_part-1.bsp', 'de441_part-2.bsp'
-    ]
-kernels = [BASE + i for i in kernels]
-
-for k in kernels:
-    sp.furnsh(k)
+sp.furnsh('vernal/data/ker/historic.tm')
 
 years = np.arange(2000, 17190, 1)
 

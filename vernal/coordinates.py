@@ -78,7 +78,7 @@ def gcrs_to_true_equator(tt, pos_gcrs, utc, eop=None, polar_motion=True):
         x += dx
         y += dy
     else:
-        x, y = 0, 0
+        x, y = 0, 0 #deghat: eshtebah!
     s = erfa.s06(tt, 0.0, x, y)
     bpn = erfa.c2ixys(x, y, s) #givec CIRS
     if polar_motion and (eop is not None):
