@@ -3,6 +3,7 @@ import erfa
 import spiceypy as sp
 from iers import historic_ut1_tt
 
+
 J2000 = 2451545
 
 def et2jd(et):
@@ -50,6 +51,13 @@ def tt2ut1(tt, delta_df=None):
     return ut1
 
 
+##def guess_et_ver(y):
+##    et2000ver = 6809769.449749
+##    dy = y - 2000
+##    et_guess = et2000ver + (dy * 365.25 * 86400)
+##    return et_guess
+
+
 def guess_et_ver(y):
     """
     Guess an initial value for vernal equinox for given year
@@ -59,10 +67,18 @@ def guess_et_ver(y):
     Returns:
         et_guess (float): time of vernal equinox (et)
     """
-    et2000ver = 6809769.449749
-    dy = y - 2000
-    et_guess = et2000ver + (dy * 365.25 * 86400)
+    if y > 7000:
+        et0 = 4277836.203775127
+        dy = y - 7000
+    elif y < -7000:
+        et0 = -835554.3652559691
+        dy = y + 7000
+    else:
+        et0 = 6809769.449749
+        dy = y - 2000
+    et_guess = et0 + (dy * 365.25 * 86400)
     return et_guess
+
 
 
 def sofa_time(t):
