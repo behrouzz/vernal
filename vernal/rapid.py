@@ -14,6 +14,18 @@ from .time import jd2et, et2jd, guess_et_ver
 
 KM2AU = 1 / 149597870.7
 
+dc_season = {
+    1: 'spring',
+    2: 'summer',
+    3: 'autumn',
+    4: 'winter',
+    5: 'march equinox',
+    6: 'september equinox',
+    7: 'june solstice',
+    8: 'december solstice'
+    }
+
+
 def pos_sun_gcrs(et):
     state, _ = sp.spkez(targ=10, et=et, ref='J2000', abcorr='LT+S', obs=399)
     return state[:3]
@@ -42,26 +54,56 @@ def dec_true_sun(et, rot_kind):
     return dec
 
 
+def get_season(et):
+    dec = dec_true_sun(et, 'sofa_bpn')
+    if dec > 0:
+        seasons = set([1, 2])
+    elif dec < 0:
+        seasons = set([3, 4])
+    else:
+        seasons = set([5, 6]) #1far or 1mehr
+        
+    dec1 = dec_true_sun(et-5, 'sofa_bpn')
+    dec2 = dec_true_sun(et+5, 'sofa_bpn')
+    if dec1 < dec2:
+        season = set([1, 4]) & seasons
+    elif dec1 > dec2:
+        season = set([2, 3]) & seasons
+    else:
+        season = set([7, 8]) & seasons #1tir or 1dey 
+    return season
+
+
 ##def do_loop(et_guess, dt, rot_kind):
 ##    et_i = et_guess - (86400*dt)
 ##    et_f = et_guess + (86400*dt)
-##    while (et_f - et_i) > 1e-6: #1e-6 for high precision
+##    while (et_f - et_i) > 1e-6:
 ##        rng = np.linspace(et_i, et_f, 3)
 ##        dec = np.zeros((2,))
 ##        for i, et in enumerate([rng[:2].mean(), rng[1:].mean()]):
 ##            dec[i] = dec_true_sun(et, rot_kind)
 ##        if abs(dec[0]) < abs(dec[1]):
 ##            et_f = (et_i + et_f) / 2
-##        elif abs(dec[0]) > abs(dec[1]):
+##        else:
 ##            et_i = (et_i + et_f) / 2
-##        else: #new
-##            return (et_i + et_f) / 2
-##    et = np.interp(0, dec, np.array([rng[:2].mean(), rng[1:].mean()]))
+##    #et = np.interp(0, dec, np.array([rng[:2].mean(), rng[1:].mean()]))
+##    et = (et_i + et_f) / 2 #movaqat
+##    print(dec)
 ##    return et
+
 
 def do_loop(et_guess, dt, rot_kind):
     et_i = et_guess - (86400*dt)
     et_f = et_guess + (86400*dt)
+    dec1 = dec_true_sun(et_i, rot_kind)
+    dec2 = dec_true_sun(et_f, rot_kind)
+    if dec1 > dec2:
+        raise Exception('Bad initial et_guess!')
+    if abs(dec1) < abs(dec2):
+        et_f = (et_i + et_f) / 2
+    else:
+        et_i = (et_i + et_f) / 2
+        
     while (et_f - et_i) > 1e-6:
         rng = np.linspace(et_i, et_f, 3)
         dec = np.zeros((2,))
@@ -71,9 +113,9 @@ def do_loop(et_guess, dt, rot_kind):
             et_f = (et_i + et_f) / 2
         else:
             et_i = (et_i + et_f) / 2
-    #et = np.interp(0, dec, np.array([rng[:2].mean(), rng[1:].mean()]))
-    et = (et_i + et_f) / 2 #movaqat
-    print(dec)
+    #print(dec)
+    et = np.interp(0, dec, np.array([rng[:2].mean(), rng[1:].mean()]))
+    #et = (et_i + et_f) / 2 #movaqat
     return et
 
 
