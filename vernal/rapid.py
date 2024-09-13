@@ -104,7 +104,7 @@ def do_loop(et_guess, dt, rot_kind):
     else:
         et_i = (et_i + et_f) / 2
         
-    while (et_f - et_i) > 1e-6:
+    while (et_f - et_i) > 1e-4:
         rng = np.linspace(et_i, et_f, 3)
         dec = np.zeros((2,))
         for i, et in enumerate([rng[:2].mean(), rng[1:].mean()]):
@@ -131,6 +131,7 @@ def from2000_to_year(n, back, dt, rot_kind):
         times[i+1] = y1
         year_length = y1 - y0
         y0 = y1
+        print(i+1)
     return times
 
 
@@ -146,10 +147,10 @@ def df2000_to_year(year, dt, rot_kind):
 
     years = np.arange(y1, y2+1, 1)
     times = from2000_to_year(n=len(years), back=back, dt=dt, rot_kind=rot_kind)
-    tt = et2jd(times)
+    tdb = et2jd(times)
     if back:
         years = years[::-1]
-    df = pd.DataFrame({'year':years, 'tt':tt})
+    df = pd.DataFrame({'year':years, 'tdb':tdb})
     df.sort_values('year', ignore_index=True, inplace=True)
     return df
 
