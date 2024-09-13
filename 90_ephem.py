@@ -13,8 +13,8 @@ import ephem
 tt = []
 
 
-y1 = -3000
-y2 = 8000
+y1 = 1500
+y2 = 2500
 years = np.arange(y1, y2, 1)
 
 d = ephem.date((y1,1,1))
@@ -28,7 +28,7 @@ df = pd.DataFrame({'year':years, 'tt':tt})
 df['d'] = df['tt'].diff()
 
 fig, ax = plt.subplots()
-ax.scatter(df['year'], df['d'], s=5)
+ax.plot(df['year'].values, df['d'].values)
 ax.ticklabel_format(useOffset=False)
 plt.grid()
 plt.show()

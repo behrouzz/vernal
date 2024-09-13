@@ -92,6 +92,33 @@ def get_season(et):
 ##    return et
 
 
+##def do_loop(et_guess, dt, rot_kind):
+##    et_i = et_guess - (86400*dt)
+##    et_f = et_guess + (86400*dt)
+##    dec1 = dec_true_sun(et_i, rot_kind)
+##    dec2 = dec_true_sun(et_f, rot_kind)
+##    if dec1 > dec2:
+##        raise Exception('Bad initial et_guess!')
+##    if abs(dec1) < abs(dec2):
+##        et_f = (et_i + et_f) / 2
+##    else:
+##        et_i = (et_i + et_f) / 2
+##        
+##    while (et_f - et_i) > 1e-4:
+##        rng = np.linspace(et_i, et_f, 3)
+##        dec = np.zeros((2,))
+##        for i, et in enumerate([rng[:2].mean(), rng[1:].mean()]):
+##            dec[i] = dec_true_sun(et, rot_kind)
+##        if abs(dec[0]) < abs(dec[1]):
+##            et_f = (et_i + et_f) / 2
+##        else:
+##            et_i = (et_i + et_f) / 2
+##    #print(dec)
+##    et = np.interp(0, dec, np.array([rng[:2].mean(), rng[1:].mean()]))
+##    #et = (et_i + et_f) / 2 #movaqat
+##    return et
+
+
 def do_loop(et_guess, dt, rot_kind):
     et_i = et_guess - (86400*dt)
     et_f = et_guess + (86400*dt)
@@ -99,24 +126,35 @@ def do_loop(et_guess, dt, rot_kind):
     dec2 = dec_true_sun(et_f, rot_kind)
     if dec1 > dec2:
         raise Exception('Bad initial et_guess!')
-    if abs(dec1) < abs(dec2):
+    elif abs(dec1) < abs(dec2):
         et_f = (et_i + et_f) / 2
     else:
         et_i = (et_i + et_f) / 2
         
-    while (et_f - et_i) > 1e-4:
-        rng = np.linspace(et_i, et_f, 3)
-        dec = np.zeros((2,))
-        for i, et in enumerate([rng[:2].mean(), rng[1:].mean()]):
-            dec[i] = dec_true_sun(et, rot_kind)
-        if abs(dec[0]) < abs(dec[1]):
+    while True:
+        dec1 = dec_true_sun(et_i, rot_kind)
+        dec2 = dec_true_sun(et_f, rot_kind)
+        if (et_f - et_i) < 1e-3:
+            break
+        if dec1 > dec2:
+            raise Exception('Bad initial et_guess!')
+        elif abs(dec1) < abs(dec2):
             et_f = (et_i + et_f) / 2
         else:
             et_i = (et_i + et_f) / 2
-    #print(dec)
-    et = np.interp(0, dec, np.array([rng[:2].mean(), rng[1:].mean()]))
-    #et = (et_i + et_f) / 2 #movaqat
+    et = np.interp(0, [dec1, dec2], [et_i, et_f])
     return et
+
+
+def refine(et, rot_kind, dt=1800, n=100):
+    et1 = et - dt
+    et2 = et + dt
+    ets = np.linspace(et1, et2, n)
+    dec = np.zeros((len(ets),))
+    for i, et_ in enumerate(ets):
+        dec[i] = dec_true_sun(et_, rot_kind)
+    coefs = np.polyfit(ets, dec, 1)
+    return np.roots(coefs)[0]
 
 
 def from2000_to_year(n, back, dt, rot_kind):
