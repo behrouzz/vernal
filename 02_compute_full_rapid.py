@@ -4,7 +4,7 @@ from vernal.rapid import df2000_to_year, refine
 from vernal.time import jd2et, et2jd
 
 
-sp.furnsh('vernal/data/ker/historic.tm')
+sp.furnsh('vernal/data/ker/historic_h21.tm')
 
 def refine_df(rot_kind):
     df = pd.read_csv(f'vernal/data/de441/{rot_kind}.csv')

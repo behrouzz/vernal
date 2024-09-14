@@ -4,6 +4,13 @@ from iers import EOP, historic_ut1_tt
 from .coordinates import true_sun
 from .time import et2tt, et2jd, guess_et_ver
 
+def initial_guess(year):
+    df = pd.read_csv('data/de441/sofa_bpn.csv')
+    #should change to current folder!!!!!!
+    if len(df[df['year']==year]) != 1:
+        raise Exception('Valid years: from -13198 to 17189')
+    tdb = df.loc[df['year']==year, 'tdb'].iloc[0]
+    return tdb
 
 def do_loop(et_guess, delta_df, eop):
     dt = 5 #t=35 for long time until B.C. 2000

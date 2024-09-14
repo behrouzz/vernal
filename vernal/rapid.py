@@ -3,7 +3,10 @@ RAPID
 =====
 Should only be used for rapid or longterm calculations
 
-dt=150 is the best choice for entire historical period
+Uses three kinds of rotation matrix:
+ - 'spice_tete'
+ - 'sofa_mean'
+ - 'sofa_bpn'
 """
 
 import erfa
@@ -11,19 +14,11 @@ import numpy as np
 import pandas as pd
 import spiceypy as sp
 from .time import jd2et, et2jd, guess_et_ver
+from .tools import *
 
 KM2AU = 1 / 149597870.7
 
-dc_season = {
-    1: 'spring',
-    2: 'summer',
-    3: 'autumn',
-    4: 'winter',
-    5: 'march equinox',
-    6: 'september equinox',
-    7: 'june solstice',
-    8: 'december solstice'
-    }
+
 
 
 def pos_sun_gcrs(et):
@@ -54,42 +49,14 @@ def dec_true_sun(et, rot_kind):
     return dec
 
 
-def get_season(et):
-    dec = dec_true_sun(et, 'sofa_bpn')
-    if dec > 0:
-        seasons = set([1, 2])
-    elif dec < 0:
-        seasons = set([3, 4])
-    else:
-        seasons = set([5, 6]) #1far or 1mehr
-        
-    dec1 = dec_true_sun(et-5, 'sofa_bpn')
-    dec2 = dec_true_sun(et+5, 'sofa_bpn')
-    if dec1 < dec2:
-        season = set([1, 4]) & seasons
-    elif dec1 > dec2:
-        season = set([2, 3]) & seasons
-    else:
-        season = set([7, 8]) & seasons #1tir or 1dey 
-    return season
+def verify(tdb, dt, rot_kind):
+    et = jd2et(tdb)
+    f = lambda et: dec_true_sun(et, rot_kind)
+    return do_verify(et, f, dt)
 
-
-##def do_loop(et_guess, dt, rot_kind):
-##    et_i = et_guess - (86400*dt)
-##    et_f = et_guess + (86400*dt)
-##    while (et_f - et_i) > 1e-6:
-##        rng = np.linspace(et_i, et_f, 3)
-##        dec = np.zeros((2,))
-##        for i, et in enumerate([rng[:2].mean(), rng[1:].mean()]):
-##            dec[i] = dec_true_sun(et, rot_kind)
-##        if abs(dec[0]) < abs(dec[1]):
-##            et_f = (et_i + et_f) / 2
-##        else:
-##            et_i = (et_i + et_f) / 2
-##    #et = np.interp(0, dec, np.array([rng[:2].mean(), rng[1:].mean()]))
-##    et = (et_i + et_f) / 2 #movaqat
-##    print(dec)
-##    return et
+def loop(et_guess, dt, rot_kind):
+    f = lambda et: dec_true_sun(et, rot_kind)
+    return do_loop(et_guess, f, dt)
 
 
 ##def do_loop(et_guess, dt, rot_kind):
@@ -99,51 +66,24 @@ def get_season(et):
 ##    dec2 = dec_true_sun(et_f, rot_kind)
 ##    if dec1 > dec2:
 ##        raise Exception('Bad initial et_guess!')
-##    if abs(dec1) < abs(dec2):
+##    elif abs(dec1) < abs(dec2):
 ##        et_f = (et_i + et_f) / 2
 ##    else:
 ##        et_i = (et_i + et_f) / 2
 ##        
-##    while (et_f - et_i) > 1e-4:
-##        rng = np.linspace(et_i, et_f, 3)
-##        dec = np.zeros((2,))
-##        for i, et in enumerate([rng[:2].mean(), rng[1:].mean()]):
-##            dec[i] = dec_true_sun(et, rot_kind)
-##        if abs(dec[0]) < abs(dec[1]):
+##    while True:
+##        dec1 = dec_true_sun(et_i, rot_kind)
+##        dec2 = dec_true_sun(et_f, rot_kind)
+##        if (et_f - et_i) < 1e-3:
+##            break
+##        if dec1 > dec2:
+##            raise Exception('Bad initial et_guess!')
+##        elif abs(dec1) < abs(dec2):
 ##            et_f = (et_i + et_f) / 2
 ##        else:
 ##            et_i = (et_i + et_f) / 2
-##    #print(dec)
-##    et = np.interp(0, dec, np.array([rng[:2].mean(), rng[1:].mean()]))
-##    #et = (et_i + et_f) / 2 #movaqat
+##    et = np.interp(0, [dec1, dec2], [et_i, et_f])
 ##    return et
-
-
-def do_loop(et_guess, dt, rot_kind):
-    et_i = et_guess - (86400*dt)
-    et_f = et_guess + (86400*dt)
-    dec1 = dec_true_sun(et_i, rot_kind)
-    dec2 = dec_true_sun(et_f, rot_kind)
-    if dec1 > dec2:
-        raise Exception('Bad initial et_guess!')
-    elif abs(dec1) < abs(dec2):
-        et_f = (et_i + et_f) / 2
-    else:
-        et_i = (et_i + et_f) / 2
-        
-    while True:
-        dec1 = dec_true_sun(et_i, rot_kind)
-        dec2 = dec_true_sun(et_f, rot_kind)
-        if (et_f - et_i) < 1e-3:
-            break
-        if dec1 > dec2:
-            raise Exception('Bad initial et_guess!')
-        elif abs(dec1) < abs(dec2):
-            et_f = (et_i + et_f) / 2
-        else:
-            et_i = (et_i + et_f) / 2
-    et = np.interp(0, [dec1, dec2], [et_i, et_f])
-    return et
 
 
 def refine(et, rot_kind, dt=1800, n=100):
@@ -165,7 +105,7 @@ def from2000_to_year(n, back, dt, rot_kind):
     times = np.zeros((n,))
     times[0] = y0
     for i in range(n-1):
-        y1 = do_loop(y0 + year_length, dt, rot_kind)
+        y1 = loop(y0 + year_length, dt, rot_kind)
         times[i+1] = y1
         year_length = y1 - y0
         y0 = y1
@@ -195,7 +135,7 @@ def df2000_to_year(year, dt, rot_kind):
 #not very useful
 def vernal_equinox_of_year(year, dt, rot_kind):
     et_guess = guess_et_ver(year)
-    et_ver = do_loop(et_guess, dt, rot_kind)
+    et_ver = loop(et_guess, dt, rot_kind)
     return et_ver
 
     

@@ -14,14 +14,14 @@ df3 = pd.read_csv('vernal/data/de441/sofa_bpn.csv')
 
 df = df1.copy()
 
-sp.furnsh('vernal/data/ker/historic.tm')
+sp.furnsh('vernal/data/ker/historic_h21.tm')
 
 tdb = df.loc[df['year']==2461, 'tdb'].iloc[0]
 
 dec_ = dec_true_sun(jd2et(tdb), 'spice_tete')
 
-et1 = jd2et(tdb) - 1800
-et2 = jd2et(tdb) + 1800
+et1 = jd2et(tdb) - 1
+et2 = jd2et(tdb) + 1
 
 ets = np.linspace(et1, et2, 100)
 

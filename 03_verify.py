@@ -1,31 +1,18 @@
 import pandas as pd
-from vernal.rapid import dec_true_sun
-from vernal.time import jd2et, et2jd
+from vernal.rapid import verify
 import spiceypy as sp
 
-def is_wrong(tdb, rot_kind, dt):
-    problem = False
-    et1 = jd2et(tdb) - dt
-    et2 = jd2et(tdb) + dt
-    dec1 = dec_true_sun(et1, rot_kind)
-    dec2 = dec_true_sun(et2, rot_kind)
-    if (dec1 > 0) or (dec2 < 0):
-        problem = True
-        print(tdb)
-        print([dec1, dec2])
-    return problem
 
-
-sp.furnsh('vernal/data/ker/historic.tm')
+sp.furnsh('vernal/data/ker/historic_h21.tm')
 
 rot_kind = 'sofa_bpn'
 
 df = pd.read_csv(f'vernal/data/de441/{rot_kind}.csv')
+df = df.head()
 
 for i, v in df.iterrows():
-    if is_wrong(v['tdb'], rot_kind, dt=1):
+    if not verify(v['tdb'], dt=1, rot_kind=rot_kind):
         print(v['year'])
         print('-'*50)
-
 
 sp.kclear()
