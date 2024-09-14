@@ -3,14 +3,35 @@ import pandas as pd
 from iers import EOP, historic_ut1_tt
 from .coordinates import true_sun
 from .time import et2tt, et2jd, guess_et_ver
+import os, inspect
+
+def nothing():
+    pass
+
+FOLDER_DATA = os.path.dirname(inspect.getfile(nothing)) + '/data/'
 
 def initial_guess(year):
-    df = pd.read_csv('data/de441/sofa_bpn.csv')
-    #should change to current folder!!!!!!
+    df = pd.read_csv(FOLDER_DATA + 'de441/sofa_bpn.csv')
     if len(df[df['year']==year]) != 1:
         raise Exception('Valid years: from -13198 to 17189')
     tdb = df.loc[df['year']==year, 'tdb'].iloc[0]
     return tdb
+
+
+def get_table(y1=None, y2=None, rot_kind='sofa_bpn'):
+    df = pd.read_csv(FOLDER_DATA + f'de441/{rot_kind}.csv')
+    if (y1 is not None) and (y2 is not None):
+        if y1 > y2:
+            y1, y2 = y2, y1
+        df = df[(df['year']>=y1) & (df['year']<=y2)]
+    elif (y1 is not None) and (y2 is None):
+        df = df[df['year']>=y1]
+    elif (y1 is None) and (y2 is not None):
+        df = df[df['year']<=y2]
+    return df
+
+#================================================
+
 
 def do_loop(et_guess, delta_df, eop):
     dt = 5 #t=35 for long time until B.C. 2000
