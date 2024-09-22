@@ -7,13 +7,13 @@ KM2AU = 1 / 149597870.7
 KMpS2AUpD = 0.0005775483273639937
 
 
-def true_sun_spice_inner(et):
-    rotmat = sp.sxform('J2000', 'TETE', et)[:3,:3]
-    pos, _ = sp.spkez(10, et, 'J2000', 'LT+S', 399)
-    sunJ2000 = pos[:3] #GCRS
-    sun = np.matmul(rotmat, sunJ2000)
-    ra, dec = erfa.c2s(sun)
-    return dec
+##def true_sun_spice_inner(et):
+##    rotmat = sp.sxform('J2000', 'TETE', et)[:3,:3]
+##    pos, _ = sp.spkez(10, et, 'J2000', 'LT+S', 399)
+##    sunJ2000 = pos[:3] #GCRS
+##    sun = np.matmul(rotmat, sunJ2000)
+##    ra, dec = erfa.c2s(sun)
+##    return dec
 
 
 def get_earth(et):

@@ -14,7 +14,7 @@ df3 = pd.read_csv('vernal/data/de441/sofa_bpn.csv')
 
 df = df1.copy()
 
-sp.furnsh('vernal/data/ker/historic_h21.tm')
+sp.furnsh('vernal/data/ker/historic.tm')
 
 tdb = df.loc[df['year']==2461, 'tdb'].iloc[0]
 

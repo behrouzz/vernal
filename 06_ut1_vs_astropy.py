@@ -13,7 +13,7 @@ delta_df = historic_ut1_tt()
 consid_tt_tdb = False
 if consid_tt_tdb:
     import spiceypy as sp
-    sp.furnsh('vernal/data/ker/historic_h21.tm')
+    sp.furnsh('vernal/data/ker/historic.tm')
     df['tt'] = df['tdb'].apply(lambda x: tdb2tt(x))
     df['ut1'] = tt2ut1(df['tt'].values, delta_df)
     df['d'] = df['tt'] - df['ut1']
